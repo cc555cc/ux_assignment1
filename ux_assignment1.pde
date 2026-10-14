@@ -12,6 +12,16 @@ float last_spawn_time = 0;
 Tetrix current_tetrix = null;
 boolean show_matrix = true; //debug: draw world_matrix on screen//
 
+color[] block_colors = {
+    #FFADAD, //red//
+    #FFD6A5, //orange//
+    #FDFFB6, //yellow//
+    #CAFFBF, //green//
+    #9BF6FF, //blue//
+    #A0C4FF, //indigo//
+    #D7B5FF  //violet//
+};
+
 void setup(){
     size(1920,1050);
     Fisica.init(this);
@@ -63,10 +73,12 @@ void keyPressed(){
     }else if(keyCode == RIGHT){
         //move current tetrix right by 40//
         current_tetrix.right();
+    }else if(keyCode == ' '){
+        current_tetrix.rotate();
     }
 }
 
-//debug overlay: grid lines, cell values, and filled cells tinted red//
+//debug overlay: grid lines and cell values//
 void drawMatrix(){
     pushStyle();
     textAlign(CENTER, CENTER);
@@ -74,8 +86,7 @@ void drawMatrix(){
     stroke(0, 40);
     for (int row = 0; row < world_matrix.length; row++){
         for (int col = 0; col < world_matrix[row].length; col++){
-            if (world_matrix[row][col] != 0) fill(255, 0, 0, 80);
-            else noFill();
+            noFill(); //outline only, so piece colors are not tinted//
             rect(col * 40, row * 40, 40, 40);
             fill(0, 120);
             text(world_matrix[row][col], col * 40 + 20, row * 40 + 20);

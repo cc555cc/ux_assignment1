@@ -16,16 +16,23 @@ public class Tetrix{
     float rightest_x = 0;
 
     boolean set = false;
+
+    color block_color;
     
     public Tetrix (int shape, float x, float y){
         this.shape = shape;
         this.x = x;
         this.y = y;
+        
+        //set a random color before the blocks are built, so buildBody can use it//
+        int random = int(random(0, block_colors.length));
+        this.block_color = block_colors[random];
 
         body = new FCompound();
         setShape(shape,x,y);  
         body.setPosition(x,y);
         body.setStatic(true);
+
     }
 
     private void setShape(int shape,float init_x, float init_y){
@@ -56,6 +63,10 @@ public class Tetrix{
                 break;
         }
 
+        buildBody(init_x, init_y);
+    }
+
+    private void buildBody(float init_x, float init_y){
         int max_row = 0; //furthest row that has a block//
         int max_col = 0; //furthest column that has a block//
 
@@ -63,6 +74,10 @@ public class Tetrix{
             for(int block = 0; block < space[row].length; block++){
                 if(space[row][block] == 1){
                     FBox block_obj = new FBox(block_size,block_size);
+                    block_obj.setFillColor(this.block_color);    // inside color
+                    block_obj.setStrokeColor(#000000);           // outline color
+                    block_obj.setStrokeWeight(2);           
+                    block_obj.setNoStroke();                
                     block_obj.setPosition(block * block_size + block_size/2, row * block_size + block_size/2);  // so (x,y) is the top-left corner
                     body.addBody(block_obj);
 
@@ -129,5 +144,27 @@ public class Tetrix{
 
     public void right(){
         if (fits(x + block_size, y)) moveTo(x + block_size, y); 
+    }
+
+
+    //method for rotating the 1's in the matrix, set a new space matrix and build a new body for the block//
+    public void rotate(){
+        int[][] new_space = new int[space.length][space.length];
+        int len = space.length;
+        for (int i = 0; i < space.length; i++){
+            for(int j = 0; j < space.length; j++){
+                new_space[len - 1 - i][j] = space[j][i];
+            }
+        }
+
+        if(fits(x,y)){
+            space = new_space;
+            world.remove(this.body);
+            body = new FCompound();
+            buildBody(x,y); //add a new FBox to the body using new space matrix//
+            body.setPosition(x,y);
+            body.setStatic(true);
+            world.add(body);
+        }
     }
 }
