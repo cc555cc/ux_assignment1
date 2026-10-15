@@ -116,10 +116,18 @@ class Player{
     void draw(){
         pushStyle();
         fill(#355CFF);
-        stroke(#1D2F9B);
-        strokeWeight(2);
+        stroke(#0B1D7A);
+        strokeWeight(3);
         rectMode(CENTER);
         rect(x, y, w, h, 8);
+        stroke(#FFFFFF);
+        strokeWeight(2);
+        line(x - 8, y, x + 8, y);
+        line(x, y - 8, x, y + 8);
+        fill(20);
+        textAlign(CENTER, BOTTOM);
+        textSize(14);
+        text("PLAYER", x, y - h * 0.5 - 6);
         popStyle();
     }
 

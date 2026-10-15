@@ -47,7 +47,7 @@ void setup(){
     world = new FWorld();
     world.setEdges(); //define walls and floor at windows edge//
 
-    player = new Player(width * 0.5, height - CELL_SIZE * 2);
+    player = new Player(width * 0.5, height * 0.5);
     goalX = width * 0.5 - goalW * 0.5;
     goalY = CELL_SIZE * 0.8;
 }
@@ -64,10 +64,9 @@ void draw(){
     }
 
     world.draw();
+    if (show_matrix) drawMatrix();
     drawGoal();
     player.draw();
-
-    if (show_matrix) drawMatrix();
     drawHud();
 }
 
@@ -157,6 +156,10 @@ void keyPressed(){
         game_paused = !game_paused;
         return;
     }
+    if (key == 'm' || key == 'M'){
+        show_matrix = !show_matrix;
+        return;
+    }
 
     if (game_over || game_won || game_paused) return;
 
@@ -215,7 +218,8 @@ void drawHud(){
     textAlign(LEFT, TOP);
     textSize(16);
     text("Avatar: A/D move, W or SPACE jump, S fast-fall", 16, 12);
-    text("Bricks: Arrow keys move/rotate, ENTER hard drop, P pause", 16, 34);
+    text("Bricks: Arrow keys move/rotate, ENTER hard drop, P pause, M grid", 16, 34);
+    text("Player position: (" + int(player.x) + ", " + int(player.y) + ")", 16, 56);
 
     if (game_paused){
         textSize(36);
