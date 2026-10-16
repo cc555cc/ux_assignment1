@@ -47,7 +47,7 @@ void setup(){
     world = new FWorld();
     world.setEdges(); //define walls and floor at windows edge//
 
-    player = new Player(width * 0.5, height * 0.5);
+    player = new Player(width * 0.5, height - 80);
     goalX = width * 0.5 - goalW * 0.5;
     goalY = CELL_SIZE * 0.8;
 }

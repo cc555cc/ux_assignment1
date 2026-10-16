@@ -111,6 +111,11 @@ class Player{
             y = h * 0.5;
             vy = max(vy, 0);
         }
+        if (bottom() > height){
+            y = height - h * 0.5;
+            vy = 0;
+            on_ground = true;
+        }
     }
 
     void draw(){
