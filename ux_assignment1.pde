@@ -42,7 +42,7 @@ color[] block_colors = {
 };
 
 void setup(){
-    size(1920, 1050);
+    size(1200, 780);
     Fisica.init(this);
     world = new FWorld();
     world.setEdges(); //define walls and floor at windows edge//
