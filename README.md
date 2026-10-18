@@ -123,12 +123,3 @@ This class defines the player avatar and contains the actual platformer logic:
 
 ### The game feels too fast or too slow
 - Adjust movement and gravity constants in `ux_assignment1.pde` / `player_class.pde`
-
-## Notes
-
-This is a prototype and the gameplay is designed to be a playable concept rather than a polished commercial game. The project is structured so each teammate can work on their own part:
-
-- player movement and platform logic in the player class
-- Tetromino physics and block logic in the Tetrix class
-
-Good luck and enjoy the game!
