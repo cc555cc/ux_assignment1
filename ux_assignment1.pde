@@ -186,6 +186,26 @@ void checkPlayerCrushedByFallingBlocks(){
                     continue;
                 }
 
+                //how deep the player is inside the block on each axis//
+                float overlap_x = min(player.right(), block_right) - max(player.left(), block_left);
+                float overlap_y = min(player.bottom(), block_bottom) - max(player.top(), block_top);
+
+                //side contact: player's center is beside the block, not under it, so push them out sideways//
+                if (player.x < block_left || player.x > block_right){
+                    if (player.x < block_left + CELL_SIZE * 0.5) player.x -= overlap_x;
+                    else player.x += overlap_x;
+                    player.vx = 0;
+                    continue;
+                }
+
+                //jumped up into the bottom of the piece: bump head, no death//
+                if (player.vy < 0 && player.y > block_top + CELL_SIZE * 0.5){
+                    player.y += overlap_y;
+                    player.vy = 0;
+                    continue;
+                }
+
+                //the piece came down onto the player//
                 game_over = true;
                 return;
             }
@@ -233,11 +253,12 @@ void keyPressed(){
 
     if (key == ENTER || key == RETURN){
         //drop to lowest point possible//
-        float target_y = current_tetrix.y;
-        while (current_tetrix.fits(current_tetrix.x, target_y + CELL_SIZE)){
-            target_y += CELL_SIZE;
+        //move one cell at a time so the crush check sees every position on the way down//
+        while (current_tetrix.fits(current_tetrix.x, current_tetrix.y + CELL_SIZE)){
+            current_tetrix.moveTo(current_tetrix.x, current_tetrix.y + CELL_SIZE);
+            checkPlayerCrushedByFallingBlocks();
+            if (game_over) return;
         }
-        current_tetrix.moveTo(current_tetrix.x, target_y);
         current_tetrix.set();
     } else if (keyCode == LEFT){
         current_tetrix.left();
