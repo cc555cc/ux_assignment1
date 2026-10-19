@@ -2,11 +2,13 @@ import fisica.*;
 
 FWorld world;
 ArrayList<Tetrix> registered_tetrix = new ArrayList<Tetrix>();
-int[][] world_matrix = new int[26][48];
+int[][] world_matrix = new int[20][30];
 
 Tetrix current_tetrix = null;
 
 Player player;
+GameMenu game_menu = new GameMenu();
+GameProgress progress = new GameProgress();
 
 final int CELL_SIZE = 40;
 final float PLAYER_MOVE_SPEED = 4.8;
@@ -20,6 +22,8 @@ float goalW = 140;
 float goalH = 22;
 
 float last_move_time = 0;
+int elapsed_time_ms = 0;
+int previous_frame_time = 0;
 
 boolean show_matrix = true; //debug: draw world_matrix on screen//
 boolean game_over = false;
@@ -42,7 +46,7 @@ color[] block_colors = {
 };
 
 void setup(){
-    size(1200, 780);
+    size(1200, 800);
     Fisica.init(this);
     world = new FWorld();
     world.setEdges(); //define walls and floor at windows edge//
@@ -53,6 +57,17 @@ void setup(){
 }
 
 void draw(){
+    int now = millis();
+    if (game_menu.playing && !game_paused && !game_over && !game_won){
+        elapsed_time_ms += now - previous_frame_time;
+    }
+    previous_frame_time = now;
+
+    if (!game_menu.startScreen()){
+        last_move_time = millis();
+        return;
+    }
+
     background(255);
 
     if (!game_paused && !game_over && !game_won){
@@ -63,6 +78,17 @@ void draw(){
         checkWinCondition();
     }
 
+    if (game_over){
+        if (game_menu.gameOverScreen()) restartGame();
+        return;
+    }
+    if (game_won){
+        int choice = game_menu.youWinScreen(progress.score);
+        if (choice == 1) restartGame();
+        else if (choice == 2) nextLevel();
+        return;
+    }
+
     world.draw();
     if (show_matrix) drawMatrix();
     drawGoal();
@@ -70,10 +96,42 @@ void draw(){
     drawHud();
 }
 
+void restartGame(){
+    progress.current_level = 1;
+    resetLevel();
+}
+
+void nextLevel(){
+    progress.current_level++;
+    resetLevel();
+}
+
+void resetLevel(){
+    for (Tetrix t : registered_tetrix){
+        world.remove(t.body);
+    }
+    registered_tetrix.clear();
+    current_tetrix = null;
+    world_matrix = new int[world_matrix.length][world_matrix[0].length];
+    player = new Player(width * 0.5, height - 80);
+    game_over = false;
+    game_won = false;
+    game_paused = false;
+    a_pressed = false;
+    d_pressed = false;
+    s_pressed = false;
+    jump_pressed = false;
+    last_move_time = millis();
+    elapsed_time_ms = 0;
+    previous_frame_time = millis();
+    progress.score = 0;
+}
+
 void updateTetrixPieces(){
     float now = millis();
+    float fall_interval = max(1, game_menu.getFallInterval() / pow(2, progress.current_level - 1));
 
-    if (now - last_move_time >= 1000){
+    if (now - last_move_time >= fall_interval){
         for (Tetrix t : registered_tetrix){
             if (t.set) continue; //landed pieces stay put//
             if (!t.fits(t.x, t.y + t.block_size)){ //something is under one of its blocks//
@@ -84,7 +142,7 @@ void updateTetrixPieces(){
         }
         last_move_time = now; //reset the timer even if nothing moved//
     } else if (current_tetrix == null || current_tetrix.set){ //if this is the first tetrix, or the last one is fixed//
-        Tetrix t = new Tetrix(int(random(1, 9)), int(random(0, 45)) * CELL_SIZE, 0);
+        Tetrix t = new Tetrix(int(random(1, 9)), int(random(0, world_matrix[0].length - 3)) * CELL_SIZE, 0);
         registered_tetrix.add(t); //add t to the list of tetrix//
         t.addTo(world); //add t's body to fisica's world//
         current_tetrix = t; //set it as current tetrix being controlled//
@@ -142,6 +200,7 @@ void checkPlayerCrushedByFallingBlocks(){
 void checkWinCondition(){
     if (rectsOverlap(player.left(), player.top(), player.right(), player.bottom(),
                      goalX, goalY, goalX + goalW, goalY + goalH)){
+        progress.calculateScore(elapsed_time_ms, game_menu.difficulty);
         game_won = true;
     }
 }
@@ -152,6 +211,8 @@ boolean rectsOverlap(float a_left, float a_top, float a_right, float a_bottom,
 }
 
 void keyPressed(){
+    if (!game_menu.playing || game_over || game_won) return;
+
     if (key == 'p' || key == 'P'){
         game_paused = !game_paused;
         return;
@@ -221,21 +282,17 @@ void drawHud(){
     text("Bricks: Arrow keys move/rotate, ENTER hard drop, P pause, M grid", 16, 34);
     text("Player position: (" + int(player.x) + ", " + int(player.y) + ")", 16, 56);
 
+    int total_seconds = elapsed_time_ms / 1000;
+    int minutes = total_seconds / 60;
+    int seconds = total_seconds % 60;
+    text("Time: " + nf(minutes, 2) + ":" + nf(seconds, 2), 16, 78);
+    text("Level: " + progress.current_level, 16, 100);
+
     if (game_paused){
         textSize(36);
         fill(30, 120, 220);
         textAlign(CENTER, CENTER);
         text("PAUSED", width * 0.5, height * 0.5);
-    } else if (game_over){
-        textSize(36);
-        fill(210, 30, 30);
-        textAlign(CENTER, CENTER);
-        text("GAME OVER - You were crushed", width * 0.5, height * 0.5);
-    } else if (game_won){
-        textSize(36);
-        fill(20, 140, 40);
-        textAlign(CENTER, CENTER);
-        text("YOU WIN!", width * 0.5, height * 0.5);
     }
     popStyle();
 }
